@@ -1,0 +1,23 @@
+priority_mapping:
+  field: fields.priority.name
+  values:
+    Critical: 0
+    High: 1
+    Medium: 2
+    Low: 3
+
+security_indicators:
+  custom_fields:
+    - fields.customfield_12345  # Attack Vector
+    - fields.customfield_67890  # CVSS Score
+  labels:
+    - "security"
+    - "pentest"
+    - "vulnerability"
+
+devops_components:
+  - "kubernetes"
+  - "aws"
+  - "azure"
+  - "pipeline"
+  - "deployment"
