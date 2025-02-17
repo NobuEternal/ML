@@ -14,7 +14,7 @@ def get_processed_ids():
     with open("processed_ids.txt", "r") as f:
         return [line.strip() for line in f.readlines()]
 
-def fetch_tickets(batch_size=10000):
+def fetch_tickets(batch_size=1000):  # Reduced batch size
     """Fetch unprocessed tickets from MongoDB."""
     processed = get_processed_ids()
     client = MongoClient(MONGODB_URI)
@@ -28,8 +28,14 @@ def fetch_tickets(batch_size=10000):
     
     logging.info(f"Fetching tickets with batch size: {batch_size}")
     cursor = collection.find(query).batch_size(batch_size)
-    tickets = list(cursor)
-    logging.info(f"Fetched {len(tickets)} tickets")
+    
+    tickets = []
+    for ticket in cursor:
+        tickets.append(ticket)
+        if len(tickets) % 1000 == 0:
+            logging.info(f"Fetched {len(tickets)} tickets so far")
+    
+    logging.info(f"Fetched a total of {len(tickets)} tickets")
     
     return tickets
 

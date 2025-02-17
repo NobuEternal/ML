@@ -5,6 +5,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer
 from xgboost import XGBClassifier
 import joblib
+import torch
 
 class FeatureEngineer:
     def __init__(self, config_path="field_config.yaml"):
@@ -20,7 +21,7 @@ class FeatureEngineer:
         )
         return df
 
-def train_and_save_model(df):  # <-- Correct function name
+def train_and_save_model(df):
     try:
         # Feature Engineering
         feature_pipe = Pipeline([
@@ -32,7 +33,7 @@ def train_and_save_model(df):  # <-- Correct function name
         y = pd.DataFrame({
             "priority": df["priority"],
             "severity": df["severity"],
-            "incident_type": df["incident_patterns"].apply(lambda x: x["primary"])
+            "incident_type": df["incident_type"]
         })
 
         # Train model
@@ -55,7 +56,6 @@ def train_and_save_model(df):  # <-- Correct function name
     except Exception as e:
         print(f"❌ Training failed: {str(e)}")
 
-# Add this if using separate text embedding
 class TextEmbedder:
     def __init__(self):
         from transformers import AutoTokenizer, AutoModel

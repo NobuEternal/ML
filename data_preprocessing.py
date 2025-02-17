@@ -164,4 +164,5 @@ def clean_data(raw_tickets: list) -> pd.DataFrame:
         if col not in df.columns:
             df[col] = None
             
+    logger.info(f"Cleaned data frame with {len(df)} records")
     return df[required_columns]

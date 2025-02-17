@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 CLEANED_DATA_FILE = "cleaned_data.csv"
-BATCH_SIZE = 10000
+BATCH_SIZE = 1000  # Reduced batch size
 
 def main():
     logging.info("🚀 Starting AI Ticketing System")
@@ -44,11 +44,16 @@ def process_raw_data():
     logging.info(f"Total documents to process: {total_docs}")
     progress = tqdm(total=total_docs, desc="Processing Tickets")
     
-    for batch in fetch_tickets(BATCH_SIZE):
+    while True:
+        batch = fetch_tickets(BATCH_SIZE)
+        if not batch:
+            break
         logging.info(f"Processing batch of size: {len(batch)}")
         try:
             cleaned_batch = clean_data(batch)
+            logging.info(f"Cleaned batch size: {len(cleaned_batch)}")
             if not cleaned_batch.empty:
+                logging.info(f"Saving cleaned batch of size: {len(cleaned_batch)}")
                 # Save data
                 cleaned_batch.to_csv(
                     CLEANED_DATA_FILE,
@@ -60,6 +65,7 @@ def process_raw_data():
                 update_processed_ids(cleaned_batch["_id"].tolist())
                 
             progress.update(len(batch))
+            logging.info(f"Processed {progress.n} / {total_docs} documents")
             
         except Exception as e:
             logging.error(f"Batch processing failed: {e}")
