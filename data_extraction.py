@@ -1,12 +1,21 @@
 import os
 from pymongo import MongoClient
 from config import MONGODB_URI, DATABASE_NAME, COLLECTION_NAME
+import logging
 
-# Documentation of fetch_tickets
-## Fetch Unprocessed Tickets from MongoDB
-# The `fetch_tickets` function retrieves unprocessed ticket documents from a MongoDB collection, specifically from the "JiraRepos" database and "Jira" collection, while ensuring that only documents containing the required fields are fetched. It utilizes a batch size of 10,000 for efficient data handling and excludes any documents whose IDs are present in the set of processed IDs obtained from the "processed_ids.txt" file. The function constructs a query to filter documents based on the existence and type of the "fields" attribute, returning a cursor for further processing.
+# Set up logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+def get_processed_ids():
+    """Retrieve processed ticket IDs from a file."""
+    if not os.path.exists("processed_ids.txt"):
+        return []
+    with open("processed_ids.txt", "r") as f:
+        return [line.strip() for line in f.readlines()]
 
 def fetch_tickets(batch_size=10000):
+    """Fetch unprocessed tickets from MongoDB."""
     processed = get_processed_ids()
     client = MongoClient(MONGODB_URI)
     collection = client[DATABASE_NAME][COLLECTION_NAME]
@@ -17,5 +26,16 @@ def fetch_tickets(batch_size=10000):
         "fields": {"$exists": True, "$type": "object"}
     }
     
-    # Convert the cursor to a list before returning
-    return list(collection.find(query).batch_size(batch_size))
+    logging.info(f"Fetching tickets with batch size: {batch_size}")
+    cursor = collection.find(query).batch_size(batch_size)
+    tickets = list(cursor)
+    logging.info(f"Fetched {len(tickets)} tickets")
+    
+    return tickets
+
+def update_processed_ids(processed_ids):
+    """Update the list of processed ticket IDs in a file."""
+    with open("processed_ids.txt", "a") as f:
+        for ticket_id in processed_ids:
+            f.write(f"{ticket_id}\n")
+    logger.info(f"Updated processed IDs: {len(processed_ids)} new IDs added.")

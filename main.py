@@ -41,9 +41,11 @@ def process_raw_data():
     logging.info("📢 Processing raw data...")
     
     total_docs = sum(1 for _ in fetch_tickets(BATCH_SIZE))
+    logging.info(f"Total documents to process: {total_docs}")
     progress = tqdm(total=total_docs, desc="Processing Tickets")
     
     for batch in fetch_tickets(BATCH_SIZE):
+        logging.info(f"Processing batch of size: {len(batch)}")
         try:
             cleaned_batch = clean_data(batch)
             if not cleaned_batch.empty:
@@ -64,6 +66,7 @@ def process_raw_data():
             continue
             
     progress.close()
+    logging.info("Finished processing raw data")
 
 if __name__ == "__main__":
     main()
