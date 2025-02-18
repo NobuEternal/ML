@@ -14,28 +14,37 @@ def get_processed_ids():
     with open("processed_ids.txt", "r") as f:
         return [line.strip() for line in f.readlines()]
 
-def fetch_tickets(batch_size=1000):  # Reduced batch size
-    """Fetch unprocessed tickets from MongoDB."""
+def get_total_tickets():
+    """Get total number of unprocessed tickets in MongoDB."""
     processed = get_processed_ids()
     client = MongoClient(MONGODB_URI)
     collection = client[DATABASE_NAME][COLLECTION_NAME]
     
-    # Only fetch documents with required fields
     query = {
         "_id": {"$nin": list(processed)},
         "fields": {"$exists": True, "$type": "object"}
     }
     
-    logging.info(f"Fetching tickets with batch size: {batch_size}")
-    cursor = collection.find(query).batch_size(batch_size)
+    total = collection.count_documents(query)
+    logging.info(f"Found {total} unprocessed tickets")
+    return total
+
+def fetch_tickets(batch_size=1000, skip=0):
+    """Fetch tickets using pagination."""
+    processed = get_processed_ids()
+    client = MongoClient(MONGODB_URI)
+    collection = client[DATABASE_NAME][COLLECTION_NAME]
     
-    tickets = []
-    for ticket in cursor:
-        tickets.append(ticket)
-        if len(tickets) % 1000 == 0:
-            logging.info(f"Fetched {len(tickets)} tickets so far")
+    query = {
+        "_id": {"$nin": list(processed)},
+        "fields": {"$exists": True, "$type": "object"}
+    }
     
-    logging.info(f"Fetched a total of {len(tickets)} tickets")
+    logging.info(f"Fetching batch of {batch_size} tickets starting from {skip}")
+    cursor = collection.find(query).skip(skip).limit(batch_size)
+    
+    tickets = list(cursor)
+    logging.info(f"Fetched {len(tickets)} tickets in this batch")
     
     return tickets
 
