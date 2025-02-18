@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np  # Add numpy import
 import re
 from datetime import datetime
 from dateutil.parser import parse
